@@ -1,0 +1,6 @@
+{
+  "name": "dullStar Artist Hub",
+  "description": "A dedicated Spotify-style experience for the artist dullStar, featuring albums, song lyrics, and an administrative dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

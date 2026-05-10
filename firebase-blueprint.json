@@ -1,0 +1,51 @@
+{
+  "entities": {
+    "Artist": {
+      "title": "Artist",
+      "description": "Information about the artist dullStar",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "bio": { "type": "string" },
+        "profilePictureUrl": { "type": "string", "format": "uri" },
+        "monthlyListeners": { "type": "string" }
+      },
+      "required": ["name", "profilePictureUrl"]
+    },
+    "Album": {
+      "title": "Album",
+      "description": "An album released by the artist",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "artistId": { "type": "string" },
+        "coverImageUrl": { "type": "string", "format": "uri" },
+        "releaseYear": { "type": "string" },
+        "accentColor": { "type": "string" },
+        "similarAlbumIds": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["title", "artistId", "coverImageUrl"]
+    },
+    "Song": {
+      "title": "Song",
+      "description": "A single track in an album",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "albumId": { "type": "string" },
+        "artistId": { "type": "string" },
+        "duration": { "type": "string" },
+        "lyrics": { "type": "string" },
+        "trackNumber": { "type": "number" },
+        "streamCount": { "type": "string" },
+        "unavailable": { "type": "boolean" }
+      },
+      "required": ["title", "albumId"]
+    }
+  },
+  "firestore": {
+    "artists": { "schema": "Artist", "description": "Collection of artists" },
+    "albums": { "schema": "Album", "description": "Collection of albums" },
+    "songs": { "schema": "Song", "description": "Collection of songs" }
+  }
+}

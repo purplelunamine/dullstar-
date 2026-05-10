@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Helvetica Neue", Arial, ui-sans-serif, system-ui, sans-serif;
+  --color-spotify-green: #1DB954;
+  --color-spotify-black: #000000;
+  --color-spotify-dark: #121212;
+  --color-spotify-gray: #181818;
+  --color-spotify-light-gray: #282828;
+}
+
+:root {
+  background-color: var(--color-spotify-black);
+  color: #ffffff;
+  font-family: var(--font-sans);
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background-color: var(--color-spotify-black);
+}
+
+.spotify-gradient {
+  background: linear-gradient(180deg, #333333 0%, #121212 100%);
+}
+
+.song-row:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.lyrics-line {
+  font-size: clamp(18px, 3.5vw, 42px);
+  font-weight: 800;
+  line-height: 1.4;
+  color: #fff;
+  opacity: 0.4;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  text-align: center;
+}
+
+.lyrics-line:hover {
+  opacity: 0.8;
+}
+
+.lyrics-line.active {
+  opacity: 1;
+  transform: scale(1.02);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #5a5a5a;
+  border-radius: 10px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #888;
+  background-clip: content-box;
+}

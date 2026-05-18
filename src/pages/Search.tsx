@@ -46,7 +46,7 @@ export function Search() {
     setCurrentSong({
       id: song.id,
       title: song.title,
-      artist: 'dullStar',
+      artist: album?.title || 'Album',
       album: album?.title || 'Unknown',
       lyrics: song.lyrics,
       cover: album?.coverImageUrl || ''
@@ -122,7 +122,7 @@ export function Search() {
                     <img src={album?.coverImageUrl} className="w-12 h-12 rounded shadow-md" referrerPolicy="no-referrer" />
                     <div className="flex flex-col flex-1 min-w-0">
                       <span className={`font-bold transition-colors truncate ${song.unavailable ? 'text-zinc-500' : 'text-white group-hover:text-spotify-green'}`}>{song.title}</span>
-                      <span className="text-xs text-zinc-400 font-bold">dullStar</span>
+                      <span className="text-xs text-zinc-400 font-bold truncate">{album?.title || 'Album'}</span>
                     </div>
                     <span className="text-sm font-mono text-zinc-400 group-hover:text-white transition-colors">{song.duration || '3:30'}</span>
                   </div>

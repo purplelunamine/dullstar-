@@ -70,7 +70,7 @@ export function AlbumDetail() {
     setCurrentSong({
       id: song.id,
       title: song.title,
-      artist: 'dullStar',
+      artist: album?.title || 'Album',
       album: album?.title || 'Unknown Album',
       lyrics: song.lyrics,
       cover: album?.coverImageUrl || ''
@@ -96,7 +96,7 @@ export function AlbumDetail() {
                 <div className="w-6 h-6 rounded-full bg-zinc-800 overflow-hidden">
                    <img src="https://picsum.photos/seed/dullstar/50" className="w-full h-full object-cover" />
                 </div>
-                <span>dullStar</span>
+                <span>{album?.title || 'Album'}</span>
              </div>
              <span className="text-zinc-400">•</span>
              <span className="text-zinc-100">{album.releaseYear}</span>
@@ -131,7 +131,7 @@ export function AlbumDetail() {
               <span className="text-zinc-400 text-sm font-medium w-4 group-hover:text-white transition-colors">{i + 1}</span>
               <div className="flex flex-col min-w-0">
                 <span className={`font-bold transition-colors truncate ${song.unavailable ? 'text-zinc-500' : 'text-white group-hover:text-spotify-green'}`}>{song.title}</span>
-                <span className="text-xs text-zinc-400 group-hover:text-white transition-colors">dullStar</span>
+                <span className="text-xs text-zinc-400 group-hover:text-white transition-colors">{album?.title || 'Album'}</span>
               </div>
               <span className="text-sm font-mono text-zinc-400">{song.streamCount || '142,501'}</span>
               <span className="text-sm font-mono text-zinc-400 text-right">{song.duration || '3:30'}</span>

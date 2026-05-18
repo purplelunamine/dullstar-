@@ -41,15 +41,8 @@ export function LyricsView() {
               Lyrics
               <div className="h-[1px] w-8 bg-current" />
             </h2>
-            <div className="space-y-4">
-              {currentSong.lyrics.split('\n').map((line, i) => (
-                <p 
-                  key={i} 
-                  className={`lyrics-line ${i === 2 ? 'active' : ''}`}
-                >
-                  {line || '\u00A0'}
-                </p>
-              ))}
+            <div className="lyrics-content px-4">
+              {currentSong.lyrics}
             </div>
           </div>
         </motion.div>

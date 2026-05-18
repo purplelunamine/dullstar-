@@ -45,7 +45,7 @@ export function Home() {
     setCurrentSong({
       id: song.id,
       title: song.title,
-      artist: artist?.name || 'dullStar',
+      artist: album?.title || artist?.name || 'Album',
       album: album?.title || 'Unknown Album',
       lyrics: song.lyrics,
       cover: album?.coverImageUrl || 'https://picsum.photos/seed/dullstar/400'
@@ -105,7 +105,11 @@ export function Home() {
                       <img src={album?.coverImageUrl || 'https://picsum.photos/seed/song/100'} className="w-10 h-10 rounded-sm shadow-md" referrerPolicy="no-referrer" />
                       <div className="flex flex-col min-w-0">
                         <span className={`font-bold transition-colors truncate ${song.unavailable ? 'text-zinc-500' : 'text-white group-hover:text-spotify-green'}`}>{song.title}</span>
-                        <span className="text-xs text-zinc-400 truncate">{song.streamCount || '142,501,003'}</span>
+                        <div className="flex items-center gap-2 text-xs text-zinc-400 font-bold truncate">
+                          {album?.title && <span className="hover:underline cursor-pointer">{album.title}</span>}
+                          {album?.title && <span>•</span>}
+                          <span>{song.streamCount || '142,501,003'}</span>
+                        </div>
                       </div>
                       <span className="text-zinc-400 text-sm text-right font-mono">{song.duration || '3:30'}</span>
                     </motion.div>

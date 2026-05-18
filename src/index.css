@@ -30,24 +30,15 @@ body {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.lyrics-line {
-  font-size: clamp(18px, 3.5vw, 42px);
-  font-weight: 800;
-  line-height: 1.4;
+.lyrics-content {
+  font-size: clamp(16px, 2.5vw, 24px);
+  font-weight: 500;
+  line-height: 1.8;
   color: #fff;
-  opacity: 0.4;
-  transition: all 0.3s ease;
-  cursor: pointer;
   text-align: center;
-}
-
-.lyrics-line:hover {
-  opacity: 0.8;
-}
-
-.lyrics-line.active {
-  opacity: 1;
-  transform: scale(1.02);
+  white-space: pre-wrap;
+  user-select: text;
+  opacity: 0.9;
 }
 
 /* Scrollbar styling */

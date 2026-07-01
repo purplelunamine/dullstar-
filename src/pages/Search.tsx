@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search as SearchIcon, Loader2 } from 'lucide-react';
+import { Search as SearchIcon, Loader2, Play } from 'lucide-react';
 import { getAlbums, getSongs } from '../services/db';
 import { useLyrics } from '../contexts/LyricsContext';
 import { useNavigate } from 'react-router-dom';
@@ -90,47 +90,83 @@ export function Search() {
           </div>
         </section>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_2.5fr] gap-12">
-          <section>
-            <h2 className="text-2xl font-black mb-6 tracking-tight">{filteredAlbums.length > 0 ? 'Top result' : 'No results found'}</h2>
-            {filteredAlbums[0] && (
-              <div 
-                onClick={() => navigate(`/album/${filteredAlbums[0].id}`)}
-                className="bg-zinc-900 p-8 rounded-2xl hover:bg-zinc-800 transition-all duration-300 cursor-pointer group shadow-2xl border border-white/5"
-              >
-                <img src={filteredAlbums[0].coverImageUrl} className="w-24 h-24 rounded-lg shadow-2xl mb-8 shadow-black/80 group-hover:scale-105 transition-transform" referrerPolicy="no-referrer" />
-                <h3 className="text-4xl font-black mb-4 group-hover:underline tracking-tight">{filteredAlbums[0].title}</h3>
-                <div className="flex items-center gap-3">
-                  <span className="text-zinc-400 font-bold text-sm">Album</span>
-                  <span className="bg-spotify-dark/60 text-white px-4 py-1 rounded-full uppercase text-[10px] font-black tracking-widest border border-white/10">Artist</span>
-                </div>
-              </div>
-            )}
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-black mb-6 tracking-tight">Songs</h2>
-            <div className="flex flex-col gap-0.5">
-              {filteredSongs.map((song) => {
-                const album = albums.find(a => a.id === song.albumId);
-                return (
-                  <div 
-                    key={song.id} 
-                    onClick={() => handleSongClick(song)}
-                    className={`flex items-center gap-4 p-2.5 rounded-lg transition-colors group ${song.unavailable ? 'opacity-30 cursor-default' : 'hover:bg-white/10 cursor-pointer'}`}
-                  >
-                    <img src={album?.coverImageUrl} className="w-12 h-12 rounded shadow-md" referrerPolicy="no-referrer" />
-                    <div className="flex flex-col flex-1 min-w-0">
-                      <span className={`font-bold transition-colors truncate ${song.unavailable ? 'text-zinc-500' : 'text-white group-hover:text-spotify-green'}`}>{song.title}</span>
-                      <span className="text-xs text-zinc-400 font-bold truncate">{album?.title || 'Album'}</span>
-                    </div>
-                    <span className="text-sm font-mono text-zinc-400 group-hover:text-white transition-colors">{song.duration || '3:30'}</span>
+        <div className="flex flex-col gap-16">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_2.5fr] gap-12">
+            <section>
+              <h2 className="text-2xl font-black mb-6 tracking-tight">{filteredAlbums.length > 0 ? 'Top result' : 'No results found'}</h2>
+              {filteredAlbums[0] && (
+                <div 
+                  onClick={() => navigate(`/album/${filteredAlbums[0].id}`)}
+                  className="bg-zinc-900 p-8 rounded-2xl hover:bg-zinc-800 transition-all duration-300 cursor-pointer group shadow-2xl border border-white/5"
+                >
+                  <img src={filteredAlbums[0].coverImageUrl} className="w-24 h-24 rounded-lg shadow-2xl mb-8 shadow-black/80 group-hover:scale-105 transition-transform" referrerPolicy="no-referrer" />
+                  <h3 className="text-4xl font-black mb-4 group-hover:underline tracking-tight">{filteredAlbums[0].title}</h3>
+                  <div className="flex items-center gap-3">
+                    <span className="text-zinc-400 font-bold text-sm">Album</span>
+                    <span className="bg-spotify-dark/60 text-white px-4 py-1 rounded-full uppercase text-[10px] font-black tracking-widest border border-white/10">Artist</span>
                   </div>
-                );
-              })}
-              {filteredSongs.length === 0 && <p className="text-zinc-500 italic py-10">No songs match your search.</p>}
-            </div>
-          </section>
+                </div>
+              )}
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-black mb-6 tracking-tight">Songs</h2>
+              <div className="flex flex-col gap-0.5">
+                {filteredSongs.map((song) => {
+                  const album = albums.find(a => a.id === song.albumId);
+                  return (
+                    <div 
+                      key={song.id} 
+                      onClick={() => handleSongClick(song)}
+                      className={`flex items-center gap-4 p-2.5 rounded-lg transition-colors group ${song.unavailable ? 'opacity-30 cursor-default' : 'hover:bg-white/10 cursor-pointer'}`}
+                    >
+                      <img src={album?.coverImageUrl} className="w-12 h-12 rounded shadow-md" referrerPolicy="no-referrer" />
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <span className={`font-bold transition-colors truncate ${song.unavailable ? 'text-zinc-500' : 'text-white group-hover:text-spotify-green'}`}>{song.title}</span>
+                        <span className="text-xs text-zinc-400 font-bold truncate">{album?.title || 'Album'}</span>
+                      </div>
+                      <span className="text-sm font-mono text-zinc-400 group-hover:text-white transition-colors">{song.duration || '3:30'}</span>
+                    </div>
+                  );
+                })}
+                {filteredSongs.length === 0 && <p className="text-zinc-500 italic py-10">No songs match your search.</p>}
+              </div>
+            </section>
+          </div>
+
+          {/* Dedicated Albums Search Results Section */}
+          {filteredAlbums.length > 0 && (
+            <section>
+              <h2 className="text-2xl font-black mb-6 tracking-tight">Albums</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {filteredAlbums.map((album) => (
+                  <div 
+                    key={album.id}
+                    onClick={() => navigate(`/album/${album.id}`)}
+                    className="bg-zinc-900/40 p-5 rounded-2xl hover:bg-zinc-800/60 transition-all duration-300 group cursor-pointer border border-white/5 flex flex-col h-full"
+                  >
+                    <div className="relative mb-4 aspect-square shadow-2xl overflow-hidden rounded-xl">
+                      <img 
+                        src={album.coverImageUrl} 
+                        alt={album.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                        referrerPolicy="no-referrer" 
+                      />
+                      <div className="absolute right-4 bottom-4 w-12 h-12 bg-spotify-green rounded-full shadow-xl flex items-center justify-center translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 scale-90 group-hover:scale-100">
+                        <Play size={24} fill="black" className="ml-1 text-black" />
+                      </div>
+                    </div>
+                    <div className="mt-auto">
+                      <h3 className="font-bold truncate mb-1 text-lg group-hover:text-spotify-green transition-colors">{album.title}</h3>
+                      <p className="text-sm text-zinc-400 font-bold line-clamp-1">
+                        {album.releaseYear} • Album
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       )}
     </div>

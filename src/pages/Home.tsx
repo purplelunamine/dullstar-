@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Heart, MoreHorizontal, Loader2 } from 'lucide-react';
+import { Play, Heart, MoreHorizontal, Loader2, Edit2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useLyrics } from '../contexts/LyricsContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getAlbums, getSongs, getArtist } from '../services/db';
 
 export function Home() {
   const { setCurrentSong, setIsOpen } = useLyrics();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [artist, setArtist] = useState<any>(null);
@@ -27,8 +29,16 @@ export function Home() {
         ]);
         setArtist(artistData);
         setAlbums(albumsData || []);
-        // Just take first 5 for "popular" for now
-        setPopularSongs(songsData?.slice(0, 5) || []);
+
+        const allSongs = songsData || [];
+        const explicitlyPopular = allSongs.filter((s: any) => s.isPopular === true);
+
+        if (explicitlyPopular.length > 0) {
+          explicitlyPopular.sort((a: any, b: any) => (a.popularOrder ?? 999) - (b.popularOrder ?? 999));
+          setPopularSongs(explicitlyPopular);
+        } else {
+          setPopularSongs(allSongs.slice(0, 5));
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -90,7 +100,18 @@ export function Home() {
           {/* Popular Section */}
           {popularSongs.length > 0 && (
             <section className="mb-12">
-              <h2 className="text-2xl font-bold mb-6 tracking-tight">Popular</h2>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold tracking-tight">Popular</h2>
+                {user && (
+                  <button 
+                    onClick={() => navigate('/admin?tab=popular')}
+                    className="flex items-center gap-2 text-xs font-bold text-zinc-300 hover:text-spotify-green transition-colors bg-zinc-900 border border-zinc-700 hover:border-spotify-green/50 px-3.5 py-1.5 rounded-full"
+                  >
+                    <Edit2 size={13} />
+                    Edit Popular Songs
+                  </button>
+                )}
+              </div>
               <div className="flex flex-col gap-0.5">
                 {popularSongs.map((song, i) => {
                   const album = albums.find(a => a.id === song.albumId);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Save, X, LogIn, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Edit2, Save, X, LogIn, Loader2, Star, Flame, Search as SearchIcon, ArrowUp, ArrowDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
@@ -16,7 +16,7 @@ import {
 
 export function Admin() {
   const { user, login, logout, loading: authLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState<'albums' | 'songs'>('albums');
+  const [activeTab, setActiveTab] = useState<'albums' | 'songs' | 'popular'>('albums');
   const [isEditing, setIsEditing] = useState(false);
   const [albums, setAlbums] = useState<any[]>([]);
   const [songs, setSongs] = useState<any[]>([]);
@@ -24,9 +24,15 @@ export function Admin() {
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<any>({});
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [songSearchQuery, setSongSearchQuery] = useState('');
 
   useEffect(() => {
     document.title = "dullStar Collection - Admin";
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    if (tabParam === 'popular' || tabParam === 'songs' || tabParam === 'albums') {
+      setActiveTab(tabParam as any);
+    }
   }, []);
 
   useEffect(() => {
@@ -73,6 +79,44 @@ export function Admin() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleSongPopular = async (song: any) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const isNowPopular = !song.isPopular;
+      const currentPopularCount = songs.filter((s: any) => s.isPopular).length;
+      await updateSong(song.id, { 
+        isPopular: isNowPopular,
+        popularOrder: isNowPopular ? (song.popularOrder || currentPopularCount + 1) : null
+      });
+      await fetchSongs();
+    } catch (err: any) {
+      console.error("Toggle popular failed:", err);
+      setError("Failed to update popular status: " + (err.message || err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePopularOrderChange = async (song: any, newOrder: number) => {
+    try {
+      await updateSong(song.id, { popularOrder: newOrder });
+      setSongs(prev => prev.map(s => s.id === song.id ? { ...s, popularOrder: newOrder } : s));
+    } catch (err: any) {
+      console.error("Order change failed:", err);
+      setError("Failed to update order: " + (err.message || err));
+    }
+  };
+
+  const handleStreamCountChange = async (song: any, streams: string) => {
+    try {
+      await updateSong(song.id, { streamCount: streams });
+      setSongs(prev => prev.map(s => s.id === song.id ? { ...s, streamCount: streams } : s));
+    } catch (err: any) {
+      console.error("Stream count update failed:", err);
     }
   };
 
@@ -278,20 +322,32 @@ export function Admin() {
       )}
 
       <div className="flex gap-4 mb-8">
-        {['albums', 'songs'].map((tab: any) => (
+        {[
+          { id: 'albums', label: 'Albums' },
+          { id: 'songs', label: 'Songs' },
+          { id: 'popular', label: 'Popular Songs', icon: Flame }
+        ].map((tab: any) => (
           <button 
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-6 py-2 rounded-full font-bold text-sm transition-all ${activeTab === tab ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-6 py-2 rounded-full font-bold text-sm transition-all flex items-center gap-2 ${activeTab === tab.id ? 'bg-white text-black shadow-lg shadow-white/10' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}
           >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {tab.icon && <tab.icon size={16} className={activeTab === tab.id ? 'text-amber-500 fill-amber-500' : 'text-zinc-400'} />}
+            {tab.label}
           </button>
         ))}
       </div>
 
       <div className="bg-zinc-900/60 rounded-2xl p-6 min-h-[400px]">
         <div className="flex justify-between items-center mb-6">
-           <h2 className="text-xl font-bold capitalize">{activeTab}</h2>
+           <h2 className="text-xl font-bold capitalize flex items-center gap-2">
+             {activeTab === 'popular' ? (
+               <>
+                 <Flame size={20} className="text-amber-400 fill-amber-400" />
+                 Popular Songs Management
+               </>
+             ) : activeTab}
+           </h2>
            <div className="flex gap-2">
              {activeTab === 'albums' && (
                <button 
@@ -301,16 +357,18 @@ export function Admin() {
                  Sync Relations
                </button>
              )}
-             <button 
-               onClick={() => setShowImport(!showImport)}
-               className="text-zinc-400 hover:text-white px-4 py-2 text-sm font-bold border border-zinc-700 rounded-full transition-all"
-             >
-               Bulk Import
-             </button>
+             {activeTab !== 'popular' && (
+               <button 
+                 onClick={() => setShowImport(!showImport)}
+                 className="text-zinc-400 hover:text-white px-4 py-2 text-sm font-bold border border-zinc-700 rounded-full transition-all"
+               >
+                 Bulk Import
+               </button>
+             )}
              <button 
                onClick={() => {
                  setEditingId(null);
-                 setFormData({});
+                 setFormData(activeTab === 'popular' ? { isPopular: true } : {});
                  setIsEditing(true);
                }}
                className="flex items-center gap-2 bg-spotify-green text-black px-4 py-2 rounded-full text-sm font-bold hover:scale-105 transition-all"
@@ -472,15 +530,50 @@ export function Admin() {
                         placeholder="3:30" 
                       />
                     </div>
-                    <div className="flex items-center gap-2 py-2">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs font-bold uppercase text-zinc-500 tracking-widest">Stream Count</label>
                       <input 
-                        type="checkbox" 
-                        id="unavailable"
-                        checked={formData.unavailable || false}
-                        onChange={e => setFormData({...formData, unavailable: e.target.checked})}
-                        className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-spotify-green focus:ring-spotify-green"
+                        type="text" 
+                        value={formData.streamCount || ''}
+                        onChange={e => setFormData({...formData, streamCount: e.target.value})}
+                        className="bg-zinc-900 border border-zinc-700 rounded-md p-2 outline-none focus:border-spotify-green" 
+                        placeholder="142,501,003" 
                       />
-                      <label htmlFor="unavailable" className="text-sm font-bold text-zinc-400">Mark as Unavailable</label>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs font-bold uppercase text-zinc-500 tracking-widest">Popular Rank / Order</label>
+                      <input 
+                        type="number" 
+                        value={formData.popularOrder ?? ''}
+                        onChange={e => setFormData({...formData, popularOrder: e.target.value ? parseInt(e.target.value) : null})}
+                        className="bg-zinc-900 border border-zinc-700 rounded-md p-2 outline-none focus:border-spotify-green" 
+                        placeholder="1, 2, 3..." 
+                      />
+                    </div>
+                    <div className="flex items-center gap-6 py-2 col-span-2">
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          id="isPopular"
+                          checked={formData.isPopular || false}
+                          onChange={e => setFormData({...formData, isPopular: e.target.checked})}
+                          className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-spotify-green focus:ring-spotify-green cursor-pointer"
+                        />
+                        <label htmlFor="isPopular" className="text-sm font-bold text-amber-400 flex items-center gap-1 cursor-pointer">
+                          <Flame size={16} fill="currentColor" />
+                          Mark as Popular Song (Home Page)
+                        </label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          id="unavailable"
+                          checked={formData.unavailable || false}
+                          onChange={e => setFormData({...formData, unavailable: e.target.checked})}
+                          className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-spotify-green focus:ring-spotify-green cursor-pointer"
+                        />
+                        <label htmlFor="unavailable" className="text-sm font-bold text-zinc-400 cursor-pointer">Mark as Unavailable</label>
+                      </div>
                     </div>
                     <div className="flex flex-col gap-2 col-span-2">
                       <label className="text-xs font-bold uppercase text-zinc-500 tracking-widest">Lyrics</label>
@@ -508,29 +601,191 @@ export function Admin() {
 
         {loading && !isEditing ? (
           <div className="flex justify-center py-20"><Loader2 className="animate-spin w-12 h-12" /></div>
-        ) : (
-          <div className="flex flex-col gap-2 mt-4">
-            {items.map((item) => (
-              <div key={item.id} className="flex items-center justify-between p-4 bg-zinc-800/40 rounded-lg hover:bg-zinc-800/80 transition-colors group">
-                <div className="flex items-center gap-4">
-                  {(item.coverImageUrl || item.cover) && (
-                    <img src={item.coverImageUrl || item.cover} className="w-12 h-12 rounded shadow-md" referrerPolicy="no-referrer" />
-                  )}
-                  <div>
-                    <h4 className="font-bold">{item.title}</h4>
-                    <p className="text-xs text-zinc-400">{item.releaseYear || item.albumId}</p>
-                  </div>
+        ) : activeTab === 'popular' ? (
+          <div className="flex flex-col gap-8">
+            {/* Current Popular Songs */}
+            <div>
+              <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider mb-3 flex items-center justify-between">
+                <span>Featured Popular Songs ({songs.filter((s: any) => s.isPopular).length})</span>
+                <span className="text-xs text-zinc-500 normal-case">Displayed in 'Popular' section on Home page</span>
+              </h3>
+
+              {songs.filter((s: any) => s.isPopular).length === 0 ? (
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-6 text-center text-amber-200">
+                  <p className="font-bold mb-1">No songs explicitly marked as popular yet.</p>
+                  <p className="text-xs opacity-80">The Home page currently displays the first 5 tracks. Click "+ Add to Popular" on any song below to feature it!</p>
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={() => startEdit(item)} className="p-2 hover:bg-zinc-700 rounded-full transition-colors text-zinc-400 hover:text-white">
-                    <Edit2 size={18} />
-                  </button>
-                  <button onClick={() => handleDelete(item.id)} className="p-2 hover:bg-red-900/40 rounded-full transition-colors text-zinc-400 hover:text-red-500">
-                    <Trash2 size={18} />
-                  </button>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {songs
+                    .filter((s: any) => s.isPopular)
+                    .sort((a: any, b: any) => (a.popularOrder ?? 999) - (b.popularOrder ?? 999))
+                    .map((song, index, arr) => {
+                      const album = albums.find(a => a.id === song.albumId);
+                      return (
+                        <div key={song.id} className="flex items-center justify-between p-3.5 bg-zinc-800/60 rounded-xl border border-amber-500/20 hover:border-amber-500/40 transition-all group">
+                          <div className="flex items-center gap-4 flex-1 min-w-0">
+                            <div className="flex items-center justify-center w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 font-black text-xs">
+                              #{index + 1}
+                            </div>
+                            <img src={album?.coverImageUrl || song.cover} className="w-12 h-12 rounded shadow-md object-cover flex-shrink-0" referrerPolicy="no-referrer" />
+                            <div className="flex flex-col min-w-0 flex-1">
+                              <span className="font-bold text-white truncate flex items-center gap-2">
+                                {song.title}
+                                <span className="text-[10px] uppercase bg-amber-500/20 text-amber-300 font-black px-2 py-0.5 rounded-full">Popular</span>
+                              </span>
+                              <span className="text-xs text-zinc-400 truncate">{album?.title || 'Single'} • Duration: {song.duration || '3:30'}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <div className="flex flex-col gap-1 items-end">
+                              <label className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Streams</label>
+                              <input 
+                                type="text" 
+                                defaultValue={song.streamCount || '142,501,003'}
+                                onBlur={(e) => handleStreamCountChange(song, e.target.value)}
+                                className="bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs text-right text-zinc-300 focus:border-spotify-green outline-none w-28"
+                              />
+                            </div>
+
+                            <div className="flex gap-1">
+                              <button 
+                                onClick={() => handlePopularOrderChange(song, Math.max(1, (song.popularOrder || index + 1) - 1))}
+                                disabled={index === 0}
+                                className="p-1.5 hover:bg-zinc-700 rounded text-zinc-400 hover:text-white disabled:opacity-30 cursor-pointer"
+                                title="Move Up"
+                              >
+                                <ArrowUp size={16} />
+                              </button>
+                              <button 
+                                onClick={() => handlePopularOrderChange(song, (song.popularOrder || index + 1) + 1)}
+                                disabled={index === arr.length - 1}
+                                className="p-1.5 hover:bg-zinc-700 rounded text-zinc-400 hover:text-white disabled:opacity-30 cursor-pointer"
+                                title="Move Down"
+                              >
+                                <ArrowDown size={16} />
+                              </button>
+                            </div>
+
+                            <button 
+                              onClick={() => startEdit(song)}
+                              className="p-2 hover:bg-zinc-700 rounded-full text-zinc-400 hover:text-white transition-colors"
+                              title="Edit Song"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+
+                            <button 
+                              onClick={() => toggleSongPopular(song)}
+                              className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold rounded-full border border-red-500/20 transition-all"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+
+            {/* All Other Songs */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider">
+                  Add Songs to Popular
+                </h3>
+                <div className="relative">
+                  <SearchIcon size={14} className="absolute left-3 top-2.5 text-zinc-500" />
+                  <input 
+                    type="text" 
+                    placeholder="Search tracks..."
+                    value={songSearchQuery}
+                    onChange={(e) => setSongSearchQuery(e.target.value)}
+                    className="bg-zinc-900 border border-zinc-700 rounded-full pl-8 pr-4 py-1 text-xs text-zinc-300 outline-none focus:border-spotify-green w-48"
+                  />
                 </div>
               </div>
-            ))}
+
+              <div className="flex flex-col gap-2 max-h-[350px] overflow-y-auto pr-1">
+                {songs
+                  .filter((s: any) => !s.isPopular)
+                  .filter((s: any) => {
+                    if (!songSearchQuery) return true;
+                    const album = albums.find(a => a.id === s.albumId);
+                    return (
+                      s.title?.toLowerCase().includes(songSearchQuery.toLowerCase()) ||
+                      (album?.title && album.title.toLowerCase().includes(songSearchQuery.toLowerCase()))
+                    );
+                  })
+                  .map((song) => {
+                    const album = albums.find(a => a.id === song.albumId);
+                    return (
+                      <div key={song.id} className="flex items-center justify-between p-3 bg-zinc-800/30 rounded-xl hover:bg-zinc-800/60 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <img src={album?.coverImageUrl || song.cover} className="w-10 h-10 rounded shadow object-cover" referrerPolicy="no-referrer" />
+                          <div>
+                            <h4 className="font-bold text-sm text-white">{song.title}</h4>
+                            <p className="text-xs text-zinc-400">{album?.title || 'Single'} • {song.duration || '3:30'}</p>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => toggleSongPopular(song)}
+                          className="flex items-center gap-1.5 bg-spotify-green/20 hover:bg-spotify-green text-spotify-green hover:text-black border border-spotify-green/30 px-3 py-1.5 rounded-full text-xs font-bold transition-all"
+                        >
+                          <Plus size={14} />
+                          Add to Popular
+                        </button>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2 mt-4">
+            {items.map((item) => {
+              const isPopularSong = activeTab === 'songs' && item.isPopular;
+              return (
+                <div key={item.id} className="flex items-center justify-between p-4 bg-zinc-800/40 rounded-lg hover:bg-zinc-800/80 transition-colors group">
+                  <div className="flex items-center gap-4">
+                    {(item.coverImageUrl || item.cover) && (
+                      <img src={item.coverImageUrl || item.cover} className="w-12 h-12 rounded shadow-md object-cover" referrerPolicy="no-referrer" />
+                    )}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold">{item.title}</h4>
+                        {isPopularSong && (
+                          <span className="flex items-center gap-1 bg-amber-500/20 text-amber-300 text-[10px] font-black px-2 py-0.5 rounded-full border border-amber-500/30">
+                            <Flame size={12} fill="currentColor" />
+                            Popular
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-zinc-400">{item.releaseYear || item.albumId}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {activeTab === 'songs' && (
+                      <button 
+                        onClick={() => toggleSongPopular(item)}
+                        className={`p-2 rounded-full transition-colors ${item.isPopular ? 'text-amber-400 bg-amber-500/10 hover:bg-amber-500/20' : 'text-zinc-500 hover:text-amber-400 hover:bg-zinc-700'}`}
+                        title={item.isPopular ? "Remove from Popular" : "Mark as Popular"}
+                      >
+                        <Star size={18} fill={item.isPopular ? "currentColor" : "none"} />
+                      </button>
+                    )}
+                    <button onClick={() => startEdit(item)} className="p-2 hover:bg-zinc-700 rounded-full transition-colors text-zinc-400 hover:text-white">
+                      <Edit2 size={18} />
+                    </button>
+                    <button onClick={() => handleDelete(item.id)} className="p-2 hover:bg-red-900/40 rounded-full transition-colors text-zinc-400 hover:text-red-500">
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
             {items.length === 0 && (
               <div className="text-center py-20 text-zinc-500 italic">No entries found.</div>
             )}

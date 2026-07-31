@@ -26,6 +26,13 @@ export function Admin() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [songSearchQuery, setSongSearchQuery] = useState('');
 
+  // Filler Tracks State
+  const [showFiller, setShowFiller] = useState(false);
+  const [fillerAlbumId, setFillerAlbumId] = useState('');
+  const [fillerStart, setFillerStart] = useState<number | ''>('');
+  const [fillerEnd, setFillerEnd] = useState<number | ''>('');
+  const [isAddingFiller, setIsAddingFiller] = useState(false);
+
   useEffect(() => {
     document.title = "dullStar Collection - Admin";
     const params = new URLSearchParams(window.location.search);
@@ -117,6 +124,56 @@ export function Admin() {
       setSongs(prev => prev.map(s => s.id === song.id ? { ...s, streamCount: streams } : s));
     } catch (err: any) {
       console.error("Stream count update failed:", err);
+    }
+  };
+
+  const handleAddFiller = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fillerAlbumId || fillerStart === '' || fillerEnd === '') {
+      setError("Please select an album and specify both start and end track numbers.");
+      return;
+    }
+    const start = Number(fillerStart);
+    const end = Number(fillerEnd);
+    if (isNaN(start) || isNaN(end) || start > end || start < 1) {
+      setError("Start track number must be at least 1 and less than or equal to end track number.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setIsAddingFiller(true);
+
+    try {
+      const selectedAlbum = albums.find(a => a.id === fillerAlbumId);
+      const albumCover = selectedAlbum?.coverImageUrl || '';
+
+      for (let i = start; i <= end; i++) {
+        await addSong({
+          title: `Track ${i}`,
+          trackNumber: i,
+          albumId: fillerAlbumId,
+          unavailable: true,
+          lyrics: '',
+          duration: '3:30',
+          cover: albumCover,
+          streamCount: '0',
+          isPopular: false,
+          artistId: 'dullstar'
+        });
+      }
+
+      await fetchSongs();
+      setShowFiller(false);
+      setFillerStart('');
+      setFillerEnd('');
+      setFillerAlbumId('');
+    } catch (err: any) {
+      console.error("Failed to add filler tracks:", err);
+      setError("Failed to add filler tracks: " + (err.message || err));
+    } finally {
+      setLoading(false);
+      setIsAddingFiller(false);
     }
   };
 
@@ -359,10 +416,26 @@ export function Admin() {
              )}
              {activeTab !== 'popular' && (
                <button 
-                 onClick={() => setShowImport(!showImport)}
+                 onClick={() => {
+                   setShowImport(!showImport);
+                   setShowFiller(false);
+                 }}
                  className="text-zinc-400 hover:text-white px-4 py-2 text-sm font-bold border border-zinc-700 rounded-full transition-all"
                >
                  Bulk Import
+               </button>
+             )}
+             {activeTab === 'songs' && (
+               <button 
+                 onClick={() => {
+                   setShowFiller(!showFiller);
+                   setShowImport(false);
+                   setIsEditing(false);
+                 }}
+                 className="flex items-center gap-2 text-zinc-300 hover:text-white px-4 py-2 text-sm font-bold border border-zinc-700 hover:border-zinc-500 rounded-full transition-all"
+               >
+                 <Plus size={16} />
+                 Add Filler
                </button>
              )}
              <button 
@@ -370,6 +443,7 @@ export function Admin() {
                  setEditingId(null);
                  setFormData(activeTab === 'popular' ? { isPopular: true } : {});
                  setIsEditing(true);
+                 setShowFiller(false);
                }}
                className="flex items-center gap-2 bg-spotify-green text-black px-4 py-2 rounded-full text-sm font-bold hover:scale-105 transition-all"
              >
@@ -428,6 +502,90 @@ export function Admin() {
                      Run Import
                    </button>
                 </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showFiller && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden mb-8"
+            >
+              <div className="bg-zinc-800 rounded-xl p-6 border border-zinc-700 shadow-2xl">
+                <div className="flex justify-between items-center mb-4">
+                  <div>
+                    <h3 className="font-bold text-white text-lg">Add Filler Tracks</h3>
+                    <p className="text-xs text-zinc-400">Quickly add unreleased/unavailable filler tracks (e.g., "Track 4" through "Track 12") for an album.</p>
+                  </div>
+                  <button onClick={() => setShowFiller(false)} className="text-zinc-400 hover:text-white">
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleAddFiller} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold uppercase text-zinc-400 tracking-wider">Select Album</label>
+                    <select 
+                      value={fillerAlbumId}
+                      onChange={(e) => setFillerAlbumId(e.target.value)}
+                      required
+                      className="bg-zinc-900 border border-zinc-700 rounded-lg p-2.5 text-sm text-white outline-none focus:border-spotify-green transition-colors cursor-pointer"
+                    >
+                      <option value="">-- Choose Album --</option>
+                      {albums.map((a: any) => (
+                        <option key={a.id} value={a.id}>{a.title}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold uppercase text-zinc-400 tracking-wider">Start Track Number</label>
+                    <input 
+                      type="number" 
+                      min="1"
+                      placeholder="e.g. 4"
+                      value={fillerStart}
+                      onChange={(e) => setFillerStart(e.target.value ? parseInt(e.target.value) : '')}
+                      required
+                      className="bg-zinc-900 border border-zinc-700 rounded-lg p-2.5 text-sm text-white outline-none focus:border-spotify-green transition-colors"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold uppercase text-zinc-400 tracking-wider">End Track Number</label>
+                    <input 
+                      type="number" 
+                      min="1"
+                      placeholder="e.g. 12"
+                      value={fillerEnd}
+                      onChange={(e) => setFillerEnd(e.target.value ? parseInt(e.target.value) : '')}
+                      required
+                      className="bg-zinc-900 border border-zinc-700 rounded-lg p-2.5 text-sm text-white outline-none focus:border-spotify-green transition-colors"
+                    />
+                  </div>
+
+                  <div className="col-span-1 md:col-span-3 flex justify-end gap-3 mt-2">
+                    <button 
+                      type="button" 
+                      onClick={() => setShowFiller(false)} 
+                      className="px-5 py-2 text-sm font-bold text-zinc-400 hover:text-white"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit"
+                      disabled={isAddingFiller || !fillerAlbumId || fillerStart === '' || fillerEnd === ''}
+                      className="bg-spotify-green text-black px-6 py-2 rounded-full text-sm font-bold hover:scale-105 transition-all disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {isAddingFiller && <Loader2 className="animate-spin w-4 h-4" />}
+                      Generate Filler Tracks
+                    </button>
+                  </div>
+                </form>
               </div>
             </motion.div>
           )}

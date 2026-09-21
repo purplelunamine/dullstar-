@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Save, X, LogIn, Loader2, Star, Flame, Search as SearchIcon, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Trash2, Edit2, Save, X, LogIn, Loader2, Star, Flame, Search as SearchIcon, ArrowUp, ArrowDown, ShieldAlert, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   getAlbums, 
@@ -8,14 +9,14 @@ import {
   addAlbum, 
   addSong, 
   updateAlbum, 
-  setAlbum,
+  setAlbum, 
   updateSong, 
   deleteAlbum, 
   deleteSong 
 } from '../services/db';
 
 export function Admin() {
-  const { user, login, logout, loading: authLoading } = useAuth();
+  const { user, login, logout, loading: authLoading, isAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState<'albums' | 'songs' | 'popular'>('albums');
   const [isEditing, setIsEditing] = useState(false);
   const [albums, setAlbums] = useState<any[]>([]);
@@ -43,14 +44,14 @@ export function Admin() {
   }, []);
 
   useEffect(() => {
-    if (user) {
+    if (user && isAdmin) {
       if (activeTab === 'albums') {
         fetchAlbums();
       } else {
         fetchSongs();
       }
     }
-  }, [user, activeTab]);
+  }, [user, isAdmin, activeTab]);
 
   const fetchAlbums = async () => {
     setLoading(true);
@@ -328,22 +329,56 @@ export function Admin() {
 
   const items = activeTab === 'albums' ? albums : songs;
 
-  if (authLoading) return <div className="flex justify-center p-20"><Loader2 className="animate-spin" /></div>;
+  if (authLoading) return <div className="flex justify-center p-20"><Loader2 className="animate-spin text-spotify-green" size={32} /></div>;
 
   if (!user) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[80vh] gap-8">
+      <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 gap-8">
         <div className="text-center">
-          <h1 className="text-4xl font-black mb-2">Editor Access</h1>
-          <p className="text-zinc-400">Sign in to manage dullStar's discography</p>
+          <h1 className="text-3xl sm:text-4xl font-black mb-2">Editor Access</h1>
+          <p className="text-zinc-400 text-sm sm:text-base">Sign in with an authorized administrator account to manage dullStar</p>
         </div>
         <button 
           onClick={login}
-          className="flex items-center gap-2 bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 active:scale-95 transition-all"
+          className="flex items-center gap-2 bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 active:scale-95 transition-all shadow-lg cursor-pointer"
         >
           <LogIn size={20} />
           Login with Google
         </button>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
+        <div className="bg-zinc-900/90 border border-red-500/30 rounded-2xl p-6 sm:p-8 max-w-md w-full text-center shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto mb-5 text-red-400">
+            <ShieldAlert size={32} />
+          </div>
+          <h2 className="text-2xl font-black text-white mb-2">Access Restricted</h2>
+          <p className="text-sm text-zinc-300 mb-2">
+            Signed in as <span className="font-bold text-white break-all">{user.email}</span>
+          </p>
+          <p className="text-xs text-zinc-400 mb-6 leading-relaxed">
+            This account does not have administrator privileges. You cannot view the dullStar management tools, track details, or unreleased data.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={logout}
+              className="flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white px-5 py-2.5 rounded-full font-bold text-xs transition-all border border-zinc-700 cursor-pointer"
+            >
+              <LogOut size={15} />
+              Switch Account
+            </button>
+            <Link
+              to="/"
+              className="flex items-center justify-center gap-2 bg-white text-black hover:bg-zinc-200 px-5 py-2.5 rounded-full font-bold text-xs transition-all cursor-pointer"
+            >
+              Return to Home
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }

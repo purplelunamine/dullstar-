@@ -41,11 +41,22 @@
         "unavailable": { "type": "boolean" }
       },
       "required": ["title", "albumId"]
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "Authorized administrator user record",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "role": { "type": "string" }
+      },
+      "required": ["email"]
     }
   },
   "firestore": {
     "artists": { "schema": "Artist", "description": "Collection of artists" },
     "albums": { "schema": "Album", "description": "Collection of albums" },
-    "songs": { "schema": "Song", "description": "Collection of songs" }
+    "songs": { "schema": "Song", "description": "Collection of songs" },
+    "admins": { "schema": "Admin", "description": "Collection of authorized administrators" }
   }
 }

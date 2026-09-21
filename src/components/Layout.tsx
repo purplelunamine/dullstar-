@@ -4,10 +4,12 @@ import { Sidebar } from './Sidebar';
 import { ChevronLeft, ChevronRight, User, Home, Search, Disc3, ShieldCheck } from 'lucide-react';
 import { LyricsView } from './LyricsView';
 import { useLyrics } from '../contexts/LyricsContext';
+import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
 
 export function Layout() {
   const { currentSong } = useLyrics();
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -15,7 +17,7 @@ export function Layout() {
     { icon: Home, label: 'Home', path: '/' },
     { icon: Search, label: 'Search', path: '/search' },
     { icon: Disc3, label: 'Discography', path: '/discography' },
-    { icon: ShieldCheck, label: 'Admin', path: '/admin' },
+    { icon: ShieldCheck, label: isAdmin ? 'Admin' : 'Admin', path: '/admin' },
   ];
 
   return (
@@ -45,12 +47,21 @@ export function Layout() {
           <div className="flex items-center gap-2 pointer-events-auto">
             <Link 
               to="/admin" 
-              className="flex items-center gap-2 bg-black/60 backdrop-blur-md rounded-full px-3 py-1 sm:px-4 sm:py-1.5 hover:bg-black/80 transition-colors border border-white/10 group"
+              className={cn(
+                "flex items-center gap-2 bg-black/60 backdrop-blur-md rounded-full px-3 py-1 sm:px-4 sm:py-1.5 hover:bg-black/80 transition-colors border group",
+                isAdmin ? "border-spotify-green/40 hover:border-spotify-green" : "border-white/10"
+              )}
             >
-              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-zinc-700 flex items-center justify-center overflow-hidden">
-                 <User size={14} className="text-zinc-200" />
+              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-zinc-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+                 {user?.photoURL ? (
+                   <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
+                 ) : (
+                   <User size={14} className="text-zinc-200" />
+                 )}
               </div>
-              <span className="text-xs font-bold tracking-wide group-hover:scale-105 transition-transform">Admin</span>
+              <span className="text-xs font-bold tracking-wide group-hover:scale-105 transition-transform">
+                {isAdmin ? 'Admin' : (user ? 'Account' : 'Admin')}
+              </span>
             </Link>
           </div>
         </header>

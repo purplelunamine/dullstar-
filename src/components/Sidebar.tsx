@@ -1,9 +1,11 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Home, Search, Library, PlusSquare, Heart, Settings } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import { cn } from '../lib/utils';
 
 export function Sidebar() {
+  const { user, isAdmin } = useAuth();
   const navItems = [
     { icon: Home, label: 'Home', path: '/' },
     { icon: Search, label: 'Search', path: '/search' },
@@ -40,10 +42,24 @@ export function Sidebar() {
       </nav>
 
       <div className="mt-auto mb-4 bg-neutral-900 rounded-lg p-4 border border-white/5">
-        <h4 className="text-sm font-bold mb-2">Admin Portal</h4>
-        <p className="text-xs text-neutral-400 mb-3">Authenticate to manage the dullStar database.</p>
-        <NavLink to="/admin" className="block w-full py-2 bg-white text-black font-bold rounded-full text-xs text-center hover:bg-neutral-200 transition-colors">
-          MANAGE DATABASE
+        <h4 className="text-sm font-bold mb-1">Admin Portal</h4>
+        <p className="text-xs text-neutral-400 mb-3">
+          {isAdmin 
+            ? 'Administrator authenticated. Manage discography and tracks.' 
+            : (user 
+                ? `Signed in as ${user.email}.` 
+                : 'Authenticate to manage the dullStar database.')}
+        </p>
+        <NavLink 
+          to="/admin" 
+          className={cn(
+            "block w-full py-2 font-bold rounded-full text-xs text-center transition-all",
+            isAdmin 
+              ? "bg-spotify-green text-black hover:bg-spotify-green/90" 
+              : "bg-white text-black hover:bg-neutral-200"
+          )}
+        >
+          {isAdmin ? 'MANAGE DATABASE' : (user ? 'VIEW ACCESS' : 'ADMIN LOGIN')}
         </NavLink>
       </div>
     </aside>

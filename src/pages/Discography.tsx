@@ -34,38 +34,39 @@ export function Discography() {
   );
 
   return (
-    <div className="p-8 min-h-full">
-      <div className="flex items-center gap-4 mb-8">
+    <div className="p-4 sm:p-6 md:p-8 pt-16 md:pt-8 min-h-full">
+      <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
         <button 
           onClick={() => navigate(-1)}
-          className="p-2 hover:bg-white/10 rounded-full transition-colors group"
+          aria-label="Back"
+          className="p-2 hover:bg-white/10 active:bg-white/20 rounded-full transition-colors group"
         >
-          <ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
+          <ArrowLeft size={20} className="sm:w-6 sm:h-6 group-hover:-translate-x-1 transition-transform" />
         </button>
-        <h1 className="text-4xl font-black tracking-tight">Discography</h1>
+        <h1 className="text-2xl sm:text-4xl font-black tracking-tight">Discography</h1>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
         {albums.map((album) => (
           <div 
             key={album.id}
             onClick={() => navigate(`/album/${album.id}`)}
-            className="bg-zinc-900/40 p-5 rounded-2xl hover:bg-zinc-800/60 transition-all duration-300 group cursor-pointer border border-white/5 flex flex-col h-full"
+            className="bg-zinc-900/40 p-3 sm:p-5 rounded-xl sm:rounded-2xl hover:bg-zinc-800/60 transition-all duration-300 group cursor-pointer border border-white/5 flex flex-col h-full active:scale-[0.98]"
           >
-            <div className="relative mb-4 aspect-square shadow-2xl overflow-hidden rounded-xl">
+            <div className="relative mb-3 sm:mb-4 aspect-square shadow-2xl overflow-hidden rounded-lg sm:rounded-xl">
               <img 
                 src={album.coverImageUrl} 
                 alt={album.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
                 referrerPolicy="no-referrer" 
               />
-              <div className="absolute right-4 bottom-4 w-12 h-12 bg-spotify-green rounded-full shadow-xl flex items-center justify-center translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 scale-90 group-hover:scale-100">
-                <Play size={24} fill="black" className="ml-1 text-black" />
+              <div className="absolute right-2.5 bottom-2.5 sm:right-4 sm:bottom-4 w-10 h-10 sm:w-12 sm:h-12 bg-spotify-green rounded-full shadow-xl flex items-center justify-center translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 scale-90 group-hover:scale-100">
+                <Play size={20} fill="black" className="ml-1 text-black" />
               </div>
             </div>
             <div className="mt-auto">
-              <h3 className="font-bold truncate mb-1 text-lg group-hover:text-spotify-green transition-colors">{album.title}</h3>
-              <p className="text-sm text-zinc-400 font-bold line-clamp-1">
+              <h3 className="font-bold truncate mb-0.5 sm:mb-1 text-sm sm:text-lg group-hover:text-spotify-green transition-colors">{album.title}</h3>
+              <p className="text-xs sm:text-sm text-zinc-400 font-medium line-clamp-1">
                 {album.releaseYear} • Album
               </p>
             </div>
@@ -74,10 +75,10 @@ export function Discography() {
 
         {albums.length === 0 && (
           <div className="col-span-full py-20 text-center flex flex-col items-center gap-4">
-            <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center text-zinc-500">
-              <Play size={32} />
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-zinc-800 rounded-full flex items-center justify-center text-zinc-500">
+              <Play size={28} />
             </div>
-            <p className="text-zinc-500 italic font-bold">No records found in the library.</p>
+            <p className="text-zinc-500 italic font-bold text-sm sm:text-base">No records found in the library.</p>
           </div>
         )}
       </div>

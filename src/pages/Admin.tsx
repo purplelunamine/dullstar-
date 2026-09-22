@@ -283,7 +283,8 @@ export function Admin() {
           title: data.name,
           releaseYear: data.release,
           coverImageUrl: data.albumcover,
-          artistId: 'dullstar'
+          artistId: 'dullstar',
+          unavailable: !!data.unavailable
         };
         
         if (data.similarAlbumIds) albumPayload.similarAlbumIds = data.similarAlbumIds;
@@ -685,6 +686,19 @@ export function Admin() {
                         placeholder="album_id_1, album_id_2" 
                       />
                     </div>
+                    <div className="flex items-center gap-2 py-2 col-span-2">
+                      <input 
+                        type="checkbox" 
+                        id="albumUnavailable"
+                        checked={formData.unavailable || false}
+                        onChange={e => setFormData({...formData, unavailable: e.target.checked})}
+                        className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-spotify-green focus:ring-spotify-green cursor-pointer"
+                      />
+                      <label htmlFor="albumUnavailable" className="text-sm font-bold text-zinc-400 cursor-pointer flex items-center gap-2">
+                        <span>Mark Album as Unavailable</span>
+                        <span className="text-xs font-normal text-zinc-500">(Turns gray and unclickable across the app)</span>
+                      </label>
+                    </div>
                   </>
                 ) : (
                   <>
@@ -940,14 +954,19 @@ export function Admin() {
             {items.map((item) => {
               const isPopularSong = activeTab === 'songs' && item.isPopular;
               return (
-                <div key={item.id} className="flex items-center justify-between p-3 sm:p-4 bg-zinc-800/40 rounded-lg hover:bg-zinc-800/80 transition-colors group gap-2">
+                <div key={item.id} className={`flex items-center justify-between p-3 sm:p-4 rounded-lg transition-colors group gap-2 ${item.unavailable ? 'bg-zinc-900/60 border border-zinc-800' : 'bg-zinc-800/40 hover:bg-zinc-800/80'}`}>
                   <div className="flex items-center gap-3 sm:gap-4 min-w-0 pr-2">
                     {(item.coverImageUrl || item.cover) && (
-                      <img src={item.coverImageUrl || item.cover} className="w-10 h-10 sm:w-12 sm:h-12 rounded shadow-md object-cover flex-shrink-0" referrerPolicy="no-referrer" />
+                      <img src={item.coverImageUrl || item.cover} className={`w-10 h-10 sm:w-12 sm:h-12 rounded shadow-md object-cover flex-shrink-0 ${item.unavailable ? 'opacity-40 grayscale' : ''}`} referrerPolicy="no-referrer" />
                     )}
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5 sm:gap-2">
-                        <h4 className="font-bold text-sm sm:text-base truncate">{item.title}</h4>
+                        <h4 className={`font-bold text-sm sm:text-base truncate ${item.unavailable ? 'text-zinc-500' : ''}`}>{item.title}</h4>
+                        {item.unavailable && (
+                          <span className="bg-zinc-800 text-zinc-400 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-zinc-700 flex-shrink-0">
+                            Unavailable
+                          </span>
+                        )}
                         {isPopularSong && (
                           <span className="flex items-center gap-1 bg-amber-500/20 text-amber-300 text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded-full border border-amber-500/30 flex-shrink-0">
                             <Flame size={10} fill="currentColor" />

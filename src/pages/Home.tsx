@@ -115,19 +115,20 @@ export function Home() {
               <div className="flex flex-col gap-1">
                 {popularSongs.map((song, i) => {
                   const album = albums.find(a => a.id === song.albumId);
+                  const isSongUnavailable = song.unavailable || album?.unavailable;
                   return (
                     <motion.div 
                       key={song.id}
-                      whileHover={!song.unavailable ? { backgroundColor: 'rgba(255,255,255,0.08)' } : {}}
-                      onClick={() => handleSongClick(song)}
-                      className={`grid grid-cols-[16px_36px_1fr_auto] sm:grid-cols-[20px_40px_1fr_100px] items-center gap-2.5 sm:gap-4 px-2.5 sm:px-4 py-2 rounded-lg group transition-colors ${song.unavailable ? 'opacity-30 cursor-default' : 'cursor-pointer active:bg-white/10'}`}
+                      whileHover={!isSongUnavailable ? { backgroundColor: 'rgba(255,255,255,0.08)' } : {}}
+                      onClick={() => !isSongUnavailable && handleSongClick(song)}
+                      className={`grid grid-cols-[16px_36px_1fr_auto] sm:grid-cols-[20px_40px_1fr_100px] items-center gap-2.5 sm:gap-4 px-2.5 sm:px-4 py-2 rounded-lg group transition-colors ${isSongUnavailable ? 'opacity-30 cursor-default' : 'cursor-pointer active:bg-white/10'}`}
                     >
                       <span className="text-zinc-400 text-xs sm:text-sm font-medium w-4 text-center">{i + 1}</span>
-                      <img src={album?.coverImageUrl || 'https://picsum.photos/seed/song/100'} className="w-9 h-9 sm:w-10 sm:h-10 rounded-sm shadow-md object-cover flex-shrink-0" referrerPolicy="no-referrer" />
+                      <img src={album?.coverImageUrl || 'https://picsum.photos/seed/song/100'} className={`w-9 h-9 sm:w-10 sm:h-10 rounded-sm shadow-md object-cover flex-shrink-0 ${isSongUnavailable ? 'grayscale' : ''}`} referrerPolicy="no-referrer" />
                       <div className="flex flex-col min-w-0 pr-1">
-                        <span className={`font-bold text-sm sm:text-base transition-colors truncate ${song.unavailable ? 'text-zinc-500' : 'text-white group-hover:text-spotify-green'}`}>{song.title}</span>
+                        <span className={`font-bold text-sm sm:text-base transition-colors truncate ${isSongUnavailable ? 'text-zinc-500' : 'text-white group-hover:text-spotify-green'}`}>{song.title}</span>
                         <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-zinc-400 font-medium truncate">
-                          {album?.title && <span className="hover:underline cursor-pointer truncate max-w-[120px] sm:max-w-none">{album.title}</span>}
+                          {album?.title && <span className={`truncate max-w-[120px] sm:max-w-none ${!album?.unavailable ? 'hover:underline cursor-pointer' : ''}`} onClick={(e) => { if (!album?.unavailable) { e.stopPropagation(); navigate(`/album/${album.id}`); } }}>{album.title}</span>}
                           {album?.title && <span>•</span>}
                           <span className="font-mono">{song.streamCount || '142,501,003'}</span>
                         </div>
@@ -154,22 +155,41 @@ export function Home() {
               )}
             </div>
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              {albums.slice(0, 4).map((album) => (
-                <div 
-                  key={album.id}
-                  onClick={() => navigate(`/album/${album.id}`)}
-                  className="bg-zinc-900/40 p-3 sm:p-4 rounded-xl hover:bg-zinc-800/60 transition-all duration-300 group cursor-pointer border border-white/5 active:scale-[0.98]"
-                >
-                  <div className="relative mb-3 aspect-square shadow-2xl overflow-hidden rounded-lg">
-                    <img src={album.coverImageUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
-                    <div className="absolute right-2.5 bottom-2.5 sm:right-3 sm:bottom-3 w-10 h-10 sm:w-12 sm:h-12 bg-spotify-green rounded-full shadow-xl flex items-center justify-center translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                      <Play size={20} fill="black" className="ml-1 text-black" />
+              {albums.slice(0, 4).map((album) => {
+                const isUnavailable = !!album.unavailable;
+                return (
+                  <div 
+                    key={album.id}
+                    onClick={() => {
+                      if (!isUnavailable) navigate(`/album/${album.id}`);
+                    }}
+                    className={`p-3 sm:p-4 rounded-xl border border-white/5 transition-all duration-300 ${
+                      isUnavailable 
+                        ? 'bg-zinc-900/20 opacity-30 cursor-default grayscale' 
+                        : 'bg-zinc-900/40 hover:bg-zinc-800/60 group cursor-pointer active:scale-[0.98]'
+                    }`}
+                  >
+                    <div className="relative mb-3 aspect-square shadow-2xl overflow-hidden rounded-lg">
+                      <img 
+                        src={album.coverImageUrl} 
+                        className={`w-full h-full object-cover transition-transform duration-500 ${!isUnavailable ? 'group-hover:scale-105' : ''}`} 
+                        referrerPolicy="no-referrer" 
+                      />
+                      {!isUnavailable && (
+                        <div className="absolute right-2.5 bottom-2.5 sm:right-3 sm:bottom-3 w-10 h-10 sm:w-12 sm:h-12 bg-spotify-green rounded-full shadow-xl flex items-center justify-center translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                          <Play size={20} fill="black" className="ml-1 text-black" />
+                        </div>
+                      )}
                     </div>
+                    <h3 className={`font-bold truncate mb-0.5 text-sm sm:text-base transition-colors ${isUnavailable ? 'text-zinc-500' : 'text-white group-hover:text-spotify-green'}`}>
+                      {album.title}
+                    </h3>
+                    <span className="text-xs sm:text-sm text-zinc-400 font-medium">
+                      {album.releaseYear} • Album {isUnavailable && '• Unavailable'}
+                    </span>
                   </div>
-                  <h3 className="font-bold truncate mb-0.5 text-sm sm:text-base">{album.title}</h3>
-                  <span className="text-xs sm:text-sm text-zinc-400 font-medium">{album.releaseYear} • Album</span>
-                </div>
-              ))}
+                );
+              })}
               {albums.length === 0 && (
                 <div className="col-span-full py-10 text-zinc-500 italic text-center text-sm">No albums discovered yet.</div>
               )}

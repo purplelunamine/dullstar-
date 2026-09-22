@@ -22,7 +22,8 @@
         "coverImageUrl": { "type": "string", "format": "uri" },
         "releaseYear": { "type": "string" },
         "accentColor": { "type": "string" },
-        "similarAlbumIds": { "type": "array", "items": { "type": "string" } }
+        "similarAlbumIds": { "type": "array", "items": { "type": "string" } },
+        "unavailable": { "type": "boolean" }
       },
       "required": ["title", "artistId", "coverImageUrl"]
     },

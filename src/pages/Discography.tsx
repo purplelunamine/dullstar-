@@ -47,31 +47,42 @@ export function Discography() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
-        {albums.map((album) => (
-          <div 
-            key={album.id}
-            onClick={() => navigate(`/album/${album.id}`)}
-            className="bg-zinc-900/40 p-3 sm:p-5 rounded-xl sm:rounded-2xl hover:bg-zinc-800/60 transition-all duration-300 group cursor-pointer border border-white/5 flex flex-col h-full active:scale-[0.98]"
-          >
-            <div className="relative mb-3 sm:mb-4 aspect-square shadow-2xl overflow-hidden rounded-lg sm:rounded-xl">
-              <img 
-                src={album.coverImageUrl} 
-                alt={album.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
-                referrerPolicy="no-referrer" 
-              />
-              <div className="absolute right-2.5 bottom-2.5 sm:right-4 sm:bottom-4 w-10 h-10 sm:w-12 sm:h-12 bg-spotify-green rounded-full shadow-xl flex items-center justify-center translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 scale-90 group-hover:scale-100">
-                <Play size={20} fill="black" className="ml-1 text-black" />
+        {albums.map((album) => {
+          const isUnavailable = !!album.unavailable;
+          return (
+            <div 
+              key={album.id}
+              onClick={() => {
+                if (!isUnavailable) navigate(`/album/${album.id}`);
+              }}
+              className={`p-3 sm:p-5 rounded-xl sm:rounded-2xl border border-white/5 flex flex-col h-full transition-all duration-300 ${
+                isUnavailable 
+                  ? 'bg-zinc-900/20 opacity-30 cursor-default grayscale' 
+                  : 'bg-zinc-900/40 hover:bg-zinc-800/60 group cursor-pointer active:scale-[0.98]'
+              }`}
+            >
+              <div className="relative mb-3 sm:mb-4 aspect-square shadow-2xl overflow-hidden rounded-lg sm:rounded-xl">
+                <img 
+                  src={album.coverImageUrl} 
+                  alt={album.title}
+                  className={`w-full h-full object-cover transition-transform duration-700 ${!isUnavailable ? 'group-hover:scale-105' : ''}`} 
+                  referrerPolicy="no-referrer" 
+                />
+                {!isUnavailable && (
+                  <div className="absolute right-2.5 bottom-2.5 sm:right-4 sm:bottom-4 w-10 h-10 sm:w-12 sm:h-12 bg-spotify-green rounded-full shadow-xl flex items-center justify-center translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 scale-90 group-hover:scale-100">
+                    <Play size={20} fill="black" className="ml-1 text-black" />
+                  </div>
+                )}
+              </div>
+              <div className="mt-auto">
+                <h3 className={`font-bold truncate mb-0.5 sm:mb-1 text-sm sm:text-lg transition-colors ${isUnavailable ? 'text-zinc-500' : 'group-hover:text-spotify-green'}`}>{album.title}</h3>
+                <p className="text-xs sm:text-sm text-zinc-400 font-medium line-clamp-1">
+                  {album.releaseYear} • Album {isUnavailable && '• Unavailable'}
+                </p>
               </div>
             </div>
-            <div className="mt-auto">
-              <h3 className="font-bold truncate mb-0.5 sm:mb-1 text-sm sm:text-lg group-hover:text-spotify-green transition-colors">{album.title}</h3>
-              <p className="text-xs sm:text-sm text-zinc-400 font-medium line-clamp-1">
-                {album.releaseYear} • Album
-              </p>
-            </div>
-          </div>
-        ))}
+          );
+        })}
 
         {albums.length === 0 && (
           <div className="col-span-full py-20 text-center flex flex-col items-center gap-4">
